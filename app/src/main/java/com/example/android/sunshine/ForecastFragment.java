@@ -32,6 +32,7 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 import android.content.Intent;
 import android.util.Log;
+import android.widget.TextView;
 
 import com.example.android.sunshine.data.WeatherContract;
 import com.example.android.sunshine.sync.SunshineSyncAdapter;
@@ -139,6 +140,8 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
 
         // Get a reference to the ListView, and attach this adapter to it.
         mListView = (ListView) rootView.findViewById(R.id.listview_forecast);
+        View emptyView = rootView.findViewById(R.id.listview_forecast_empty);
+        mListView.setEmptyView(emptyView);
         mListView.setAdapter(mForecastAdapter);
         // We'll call our MainActivity
         mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -267,6 +270,7 @@ private void openPreferredLocationInMap() {
             // to, do so now.
             mListView.smoothScrollToPosition(mPosition);
         }
+        updateEmptyView();
     }
 
     @Override
@@ -278,6 +282,24 @@ private void openPreferredLocationInMap() {
         mUseTodayLayout = useTodayLayout;
         if (mForecastAdapter != null) {
             mForecastAdapter.setmUseTodayLayout(mUseTodayLayout);
+        }
+    }
+
+    /*
+        Updates the empty list view with contextually relevant information that the user can
+        use to determine why they aren't seeing weather.
+     */
+    private void updateEmptyView() {
+        if ( mForecastAdapter.getCount() == 0 ) {
+            TextView tv = (TextView) getView().findViewById(R.id.listview_forecast_empty);
+            if ( null != tv ) {
+                // if cursor is empty, why? do we have an invalid location
+                int message = R.string.empty_forecast_list;
+                if (!Utility.isNetworkAvailable(getActivity()) ) {
+                    message = R.string.empty_forecast_list_no_network;
+                }
+                tv.setText(message);
+            }
         }
     }
 }
