@@ -56,6 +56,7 @@ public class SettingsActivity extends PreferenceActivity
     // Registers a shared preference change listener that gets notified when preferences change
     @Override
     protected void onResume() {
+        //  Registering shared preferences
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
         sp.registerOnSharedPreferenceChangeListener(this);
         super.onResume();
@@ -64,6 +65,7 @@ public class SettingsActivity extends PreferenceActivity
     // Unregisters a shared preference change listener
     @Override
     protected void onPause() {
+        //  Unregistering shared preferences
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
         sp.unregisterOnSharedPreferenceChangeListener(this);
         super.onPause();
@@ -89,6 +91,7 @@ public class SettingsActivity extends PreferenceActivity
         String stringValue = value.toString();
         String key = preference.getKey();
 
+        
         if (preference instanceof ListPreference) {
             // For list preferences, look up the correct display value in
             // the preference's 'entries' list (since they have separate labels/values).
@@ -97,9 +100,26 @@ public class SettingsActivity extends PreferenceActivity
             if (prefIndex >= 0) {
                 preference.setSummary(listPreference.getEntries()[prefIndex]);
             }
-        } else {
-            // For other preferences, set the summary to the value's simple string representation.
-            preference.setSummary(stringValue);
+        } else if (key.equals(getString(R.string.pref_location_key))){
+
+            //  This is what is setting the string in the settings activity for the location.
+            //  Depending on what the status of the location it will show unknown or invalid accordingly
+            @SunshineSyncAdapter.LocationStatus int status = Utility.getLocationStatus(this);
+            switch (status) {
+                case SunshineSyncAdapter.LOCATION_STATUS_OK:
+                    preference.setSummary(stringValue);
+                    break;
+                case SunshineSyncAdapter.LOCATION_STATUS_UNKNOWN:
+                    preference.setSummary(getString(R.string.pref_location_unknown_description, value.toString()));
+                    break;
+                case SunshineSyncAdapter.LOCATION_STATUS_INVALID:
+                    preference.setSummary(getString(R.string.pref_location_error_description, value.toString()));
+                    break;
+                default:
+                    //  Note --- if the server is down we still assume the value is valid
+                preference.setSummary(stringValue);
+            }
+
         }
     }
 
