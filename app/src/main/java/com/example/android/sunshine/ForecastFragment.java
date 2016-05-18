@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 The Android Open Source Project
+ * Copyright (C) 2015 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 package com.example.android.sunshine;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
@@ -24,6 +25,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -32,10 +34,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ListView;
-import android.content.Intent;
-import android.util.Log;
 import android.widget.TextView;
 
+import com.example.android.sunshine.ForecastAdapter;
+import com.example.android.sunshine.R;
+import com.example.android.sunshine.Utility;
 import com.example.android.sunshine.data.WeatherContract;
 import com.example.android.sunshine.sync.SunshineSyncAdapter;
 
@@ -43,8 +46,6 @@ import com.example.android.sunshine.sync.SunshineSyncAdapter;
  * Encapsulates fetching the forecast and displaying it as a {@link ListView} layout.
  */
 public class ForecastFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor>, SharedPreferences.OnSharedPreferenceChangeListener {
-
-
     public static final String LOG_TAG = ForecastFragment.class.getSimpleName();
     private ForecastAdapter mForecastAdapter;
 
@@ -86,7 +87,6 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
     static final int COL_WEATHER_CONDITION_ID = 6;
     static final int COL_COORD_LAT = 7;
     static final int COL_COORD_LONG = 8;
-
 
     /**
      * A callback interface that all activities containing this fragment must
@@ -143,6 +143,7 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
             openPreferredLocationInMap();
             return true;
         }
+
         return super.onOptionsItemSelected(item);
     }
 
@@ -191,7 +192,7 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
             mPosition = savedInstanceState.getInt(SELECTED_KEY);
         }
 
-        mForecastAdapter.setmUseTodayLayout(mUseTodayLayout);
+        mForecastAdapter.setUseTodayLayout(mUseTodayLayout);
 
         return rootView;
     }
@@ -203,48 +204,34 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
     }
 
     // since we read the location when we create the loader, all we need to do is restart things
-    void onLocationChanged() {
-        updateWeather();
+    void onLocationChanged( ) {
         getLoaderManager().restartLoader(FORECAST_LOADER, null, this);
     }
 
-    private void updateWeather() {
-//        //  standard intent for alarm receiver
-//        Intent alarmIntent = new Intent(getActivity(), SunshineService.AlarmReceiver.class);
-//        //  Adding location query as extra
-//        alarmIntent.putExtra(SunshineService.LOCATION_QUERY_EXTRA, Utility.getPreferredLocation(getActivity()));
-//        //  Special kind of object that describes an intent
-//        PendingIntent pi = PendingIntent.getBroadcast(getActivity(), 0, alarmIntent, PendingIntent.FLAG_ONE_SHOT);
-//        AlarmManager am = (AlarmManager) getActivity().getSystemService(Context.ALARM_SERVICE);
-//        am.set(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 5000, pi);
-//        Intent intent = new Intent(getActivity(), SunshineService.class);
-//        intent.putExtra(SunshineService.LOCATION_QUERY_EXTRA, Utility.getPreferredLocation(getActivity()));
-//        getActivity().startService(intent);
+    private void openPreferredLocationInMap() {
+        // Using the URI scheme for showing a location found on a map.  This super-handy
+        // intent can is detailed in the "Common Intents" page of Android's developer site:
+        // http://developer.android.com/guide/components/intents-common.html#Maps
+        if ( null != mForecastAdapter ) {
+            Cursor c = mForecastAdapter.getCursor();
+            if ( null != c ) {
+                c.moveToPosition(0);
+                String posLat = c.getString(COL_COORD_LAT);
+                String posLong = c.getString(COL_COORD_LONG);
+                Uri geoLocation = Uri.parse("geo:" + posLat + "," + posLong);
 
+                Intent intent = new Intent(Intent.ACTION_VIEW);
+                intent.setData(geoLocation);
 
-        SunshineSyncAdapter.syncImmediately(getActivity());
-    }
-
-private void openPreferredLocationInMap() {
-    if ( null != mForecastAdapter ) {
-        Cursor c = mForecastAdapter.getCursor();
-        if ( null != c ) {
-            c.moveToPosition(0);
-            String posLat = c.getString(COL_COORD_LAT);
-            String posLong = c.getString(COL_COORD_LONG);
-            Uri geoLocation = Uri.parse("geo:" + posLat + posLong);
-
-            Intent intent = new Intent(Intent.ACTION_VIEW);
-            intent.setData(geoLocation);
-
-            if (intent.resolveActivity(getActivity().getPackageManager()) != null) {
-                startActivity(intent);
-            } else {
-                Log.d(LOG_TAG, "Couldn't call " + geoLocation.toString() + ", no receiving apps installed!");
+                if (intent.resolveActivity(getActivity().getPackageManager()) != null) {
+                    startActivity(intent);
+                } else {
+                    Log.d(LOG_TAG, "Couldn't call " + geoLocation.toString() + ", no receiving apps installed!");
+                }
             }
+
         }
     }
-}
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
@@ -299,7 +286,7 @@ private void openPreferredLocationInMap() {
     public void setUseTodayLayout(boolean useTodayLayout) {
         mUseTodayLayout = useTodayLayout;
         if (mForecastAdapter != null) {
-            mForecastAdapter.setmUseTodayLayout(mUseTodayLayout);
+            mForecastAdapter.setUseTodayLayout(mUseTodayLayout);
         }
     }
 
@@ -321,6 +308,9 @@ private void openPreferredLocationInMap() {
                     case SunshineSyncAdapter.LOCATION_STATUS_SERVER_INVALID:
                         message = R.string.empty_forecast_list_server_error;
                         break;
+                    case SunshineSyncAdapter.LOCATION_STATUS_INVALID:
+                        message = R.string.empty_forecast_list_invalid_location;
+                        break;
                     default:
                         if (!Utility.isNetworkAvailable(getActivity()) ) {
                             message = R.string.empty_forecast_list_no_network;
@@ -337,4 +327,5 @@ private void openPreferredLocationInMap() {
             updateEmptyView();
         }
     }
+
 }
