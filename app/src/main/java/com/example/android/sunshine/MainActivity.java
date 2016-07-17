@@ -7,12 +7,20 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import android.util.Log;
+
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GoogleApiAvailability;
+
 import com.example.android.sunshine.sync.SunshineSyncAdapter;
+import com.google.firebase.iid.FirebaseInstanceId;
 
 public class MainActivity extends AppCompatActivity implements ForecastFragment.Callback {
 
     private final String LOG_TAG =
             MainActivity.class.getSimpleName();
+
+    private final static int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
 
 
 
@@ -57,6 +65,9 @@ public class MainActivity extends AppCompatActivity implements ForecastFragment.
         //  getSyncAccount will create a new account if no sunshine.example.com account exists.
         //  If this is the case, onAccountCreated will be called.
         SunshineSyncAdapter.initializeSyncAdapter(this);
+
+        Log.d(LOG_TAG, "InstanceID token: " + FirebaseInstanceId.getInstance().getToken());
+
 
     }
 
@@ -120,6 +131,24 @@ public class MainActivity extends AppCompatActivity implements ForecastFragment.
             Intent intent = new Intent(this, DetailActivity.class).setData(contentUri);
             startActivity(intent);
         }
+    }
+
+    private boolean checkPlayServices() {
+        GoogleApiAvailability apiAvailability = GoogleApiAvailability.getInstance();
+        int resultCode = apiAvailability.isGooglePlayServicesAvailable(this);
+        if (resultCode != ConnectionResult.SUCCESS) {
+            if (
+                    apiAvailability.isUserResolvableError(resultCode)) {
+                apiAvailability.getErrorDialog(this, resultCode,
+                        PLAY_SERVICES_RESOLUTION_REQUEST).show();
+            } else {
+                Log.i(LOG_TAG, "This device is not supported.");
+
+                finish();
+            }
+            return false;
+        }
+        return true;
     }
 }
 

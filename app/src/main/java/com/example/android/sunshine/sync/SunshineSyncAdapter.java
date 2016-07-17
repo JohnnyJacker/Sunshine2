@@ -124,6 +124,8 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter {
 
             URL url = new URL(builtUri.toString());
 
+            Log.d(LOG_TAG, builtUri.toString());
+
             // Create the request to OpenWeatherMap, and open the connection
             urlConnection = (HttpURLConnection) url.openConnection();
             urlConnection.setRequestMethod("GET");
@@ -152,6 +154,10 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter {
                 return;
             }
             forecastJsonStr = buffer.toString();
+
+            Log.d("Forecast String", forecastJsonStr);
+
+
             getWeatherDataFromJson(forecastJsonStr, locationQuery);
         } catch (IOException e) {
             Log.e(LOG_TAG, "Error ", e);
@@ -224,6 +230,8 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter {
 
         try {
             JSONObject forecastJson = new JSONObject(forecastJsonStr);
+
+            Log.d("Forecast String", forecastJsonStr);
 
             // do we have an error?
             if ( forecastJson.has(OWM_MESSAGE_CODE) ) {
