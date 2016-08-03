@@ -1,19 +1,22 @@
 package com.example.android.sunshine;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 
 import android.util.Log;
 
+import com.example.android.sunshine.firebase.RegistrationIntentService;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 
 import com.example.android.sunshine.sync.SunshineSyncAdapter;
-import com.google.firebase.iid.FirebaseInstanceId;
 
 public class MainActivity extends AppCompatActivity implements ForecastFragment.Callback {
 
@@ -21,6 +24,7 @@ public class MainActivity extends AppCompatActivity implements ForecastFragment.
             MainActivity.class.getSimpleName();
 
     private final static int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
+    public static final String SENT_TOKEN_TO_SERVER = "sentTokenToServer";
 
 
 
@@ -36,6 +40,9 @@ public class MainActivity extends AppCompatActivity implements ForecastFragment.
         mLocation = Utility.getPreferredLocation(this);
 
         setContentView(R.layout.activity_main);
+        Toolbar toolbar = (Toolbar)findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayShowTitleEnabled(false);
 
         if (findViewById(R.id.weather_detail_container) != null) {
             // The detail container view will be present only in the large-screen layouts
@@ -66,7 +73,16 @@ public class MainActivity extends AppCompatActivity implements ForecastFragment.
         //  If this is the case, onAccountCreated will be called.
         SunshineSyncAdapter.initializeSyncAdapter(this);
 
-        Log.d(LOG_TAG, "InstanceID token: " + FirebaseInstanceId.getInstance().getToken());
+//        Log.d(LOG_TAG, "InstanceID token: " + FirebaseInstanceId.getInstance().getToken());
+
+        if (checkPlayServices()) {
+            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+            boolean sentToken = sharedPreferences.getBoolean(SENT_TOKEN_TO_SERVER, false);
+            if (!sentToken) {
+                Intent intent = new Intent(this, RegistrationIntentService.class);
+                startService(intent);
+            }
+        }
 
 
     }
@@ -135,7 +151,9 @@ public class MainActivity extends AppCompatActivity implements ForecastFragment.
 
     private boolean checkPlayServices() {
         GoogleApiAvailability apiAvailability = GoogleApiAvailability.getInstance();
+
         int resultCode = apiAvailability.isGooglePlayServicesAvailable(this);
+
         if (resultCode != ConnectionResult.SUCCESS) {
             if (
                     apiAvailability.isUserResolvableError(resultCode)) {

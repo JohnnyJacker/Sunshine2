@@ -1,0 +1,5 @@
+<root>
+  <item name='com.google.firebase.messaging.FirebaseMessaging INSTANCE_ID_SCOPE'>
+    <annotation name='java.lang.annotation.Deprecated' />
+  </item>
+</root>

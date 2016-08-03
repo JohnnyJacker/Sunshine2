@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.example.android.sunshine;
+package com.example.android.sunshine.firebase;
 
 import android.util.Log;
 
