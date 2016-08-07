@@ -22,7 +22,7 @@ import android.net.NetworkInfo;
 import android.preference.PreferenceManager;
 import android.text.format.Time;
 
-import com.example.android.sunshine.R;
+//import com.example.android.sunshine.R;
 import com.example.android.sunshine.sync.SunshineSyncAdapter;
 
 import java.text.DateFormat;
