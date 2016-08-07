@@ -77,6 +77,10 @@
             android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version" />
 
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyAEoxD2-xTkMMjUc00W5_Ynt6ybtnMh9EY"/>
+
 
 
         <provider

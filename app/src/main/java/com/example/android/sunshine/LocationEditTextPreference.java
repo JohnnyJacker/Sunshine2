@@ -24,8 +24,14 @@ import android.preference.EditTextPreference;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.AttributeSet;
+import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Toast;
+
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GoogleApiAvailability;
 
 public class LocationEditTextPreference extends EditTextPreference {
     static final private int DEFAULT_MINIMUM_LOCATION_LENGTH = 2;
@@ -42,8 +48,27 @@ public class LocationEditTextPreference extends EditTextPreference {
         } finally {
             a.recycle();
         }
+
+        GoogleApiAvailability apiAvailability = GoogleApiAvailability.getInstance();
+        int resultCode = apiAvailability.isGooglePlayServicesAvailable(getContext());
+        if ( resultCode == ConnectionResult.SUCCESS ) {
+            setWidgetLayoutResource(R.layout.pref_current_location);
+        }
     }
 
+    @Override
+    protected View onCreateView(ViewGroup parent) {
+        View view =  super.onCreateView(parent);
+        View currentLocation = view.findViewById(R.id.current_location);
+        currentLocation.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(getContext(), "Woo!", Toast.LENGTH_LONG).show();
+            }
+        });
+
+        return view;
+    }
 
     @Override
     protected void showDialog(Bundle state) {
