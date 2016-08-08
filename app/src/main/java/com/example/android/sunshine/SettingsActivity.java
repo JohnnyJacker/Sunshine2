@@ -24,6 +24,7 @@ import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
+import android.text.TextUtils;
 
 //import com.example.android.sunshine.R;
 import com.example.android.sunshine.Utility;
@@ -32,6 +33,7 @@ import com.example.android.sunshine.sync.SunshineSyncAdapter;
 
 import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.ui.PlacePicker;
+import com.google.android.gms.maps.model.LatLng;
 
 /**
  * A {@link PreferenceActivity} that presents a set of application settings.
@@ -171,11 +173,27 @@ public class SettingsActivity extends PreferenceActivity
                 Place place = PlacePicker.getPlace(data, this);
                 String address = place.getAddress().toString();
 
+                LatLng latLong = place.getLatLng();
+
+                if (TextUtils.isEmpty(address)) {
+                    address = String.format("(%.2f, %.2f)", latLong.latitude, latLong.longitude);
+                }
+
                 SharedPreferences sharedPreferences =
                         PreferenceManager.getDefaultSharedPreferences(this);
                 SharedPreferences.Editor editor = sharedPreferences.edit();
                 editor.putString(getString(R.string.pref_location_key), address);
+
+
+                editor.putFloat(getString(R.string.pref_location_latitude), (float) latLong.latitude);
+                editor.putFloat(getString(R.string.pref_location_longitude), (float) latLong.longitude);
                 editor.commit();
+
+                Preference locationPreference = findPreference(getString(R.string.pref_location_key));
+                setPreferenceSummary(locationPreference, address);
+
+                Utility.resetLocationStatus(this);
+                SunshineSyncAdapter.syncImmediately(this);
             }
         } else {
             super.onActivityResult(requestCode, resultCode, data);
