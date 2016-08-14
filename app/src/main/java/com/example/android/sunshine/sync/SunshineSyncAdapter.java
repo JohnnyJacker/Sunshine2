@@ -47,6 +47,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Vector;
+import com.example.android.sunshine.muzei.WeatherMuzeiSource;
 
 public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter {
     public final String LOG_TAG = SunshineSyncAdapter.class.getSimpleName();
@@ -369,6 +370,7 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter {
                         new String[] {Long.toString(dayTime.setJulianDay(julianStartDay-1))});
 
                 updateWidgets();
+                updateMuzei();
                 notifyWeather();
             }
             Log.d(LOG_TAG, "Sync Complete. " + cVVector.size() + " Inserted");
@@ -388,6 +390,16 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter {
         // Setting the package ensures that only components in our app will receive the broadcast
         Intent dataUpdatedIntent = new Intent(ACTION_DATA_UPDATED).setPackage(context.getPackageName());
         context.sendBroadcast(dataUpdatedIntent);
+    }
+
+    private void updateMuzei() {
+        // Muzei is only compatible with Jelly Bean MR1+ devices, so there's no need to update the
+        // Muzei background on lower API level devices
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+            Context context = getContext();
+            context.startService(new Intent(ACTION_DATA_UPDATED)
+                    .setClass(context, WeatherMuzeiSource.class));
+        }
     }
 
 
